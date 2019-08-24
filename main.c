@@ -1,4 +1,21 @@
 #include <stdio.h>
+#include <malloc.h>
+
+
+typedef struct Vertex
+{
+	double x;
+	double y;
+	double z;
+} Vertex;
+
+
+typedef struct Face
+{
+	Vertex a;
+	Vertex b;
+	Vertex c;
+} Face;
 
 
 void clearString(char * s, int len)
@@ -63,11 +80,25 @@ void readFaces(char * line)
 }
 
 
-void readVertexes(char * line)
+void readVertexes(char * line, Vertex * v)
 {
-	double a, b, c;
-	sscanf(line, "v %lf %lf %lf", &a, &b, &c);
+	//double a, b, c;
+	//sscanf(line, "v %lf %lf %lf", &a, &b, &c);
+
+	sscanf(line, "v %lf %lf %lf", &v->x, &v->y, &v->z);
+	//fprintf(stdout, "\tVertex: %f %f %f\n", v->x, v->y, v->z);
+
 	//fprintf(stdout, "\tA = %f, B = %f, C = %f\n", a, b, c);
+}
+
+
+void printfVertexes(Vertex * vL, int vertexes)
+{
+	int i;
+	for (i = 1; i <= vertexes; i++)
+	{
+		fprintf(stdout, "Vertex: %f %f %f\n", vL[i].x, vL[i].y, vL[i].z);
+	}
 }
 
 
@@ -76,6 +107,10 @@ void readFile(char * fileName)
 	int vertexes = 0;
 	int faces = 0;
 	char line[256] = "";
+
+	Vertex * vertexList = (Vertex *) malloc(sizeof(Vertex) * 10);
+	int vertexesInList = 10;
+
 	FILE * file = fopen(fileName, "r");
 	if (file == NULL)
 	{
@@ -93,8 +128,17 @@ void readFile(char * fileName)
 						if (line[1] == ' ')
 						{
 							//fprintf(stdout, "Vertex line: %s", line);
-							readVertexes(line);
+							if ( vertexes == vertexesInList )
+							{
+								vertexesInList += 10;
+								vertexList = (Vertex *) realloc(vertexList, sizeof(Vertex) * vertexesInList);
+								fprintf(stdout, "Expand vertexes list!\n");
+							}
+
+							//Vertex * v = (Vertex *) malloc(sizeof(Vertex));
+
 							++vertexes;
+							readVertexes(line, &vertexList[vertexes]);
 						}
 						break;
 
@@ -115,6 +159,8 @@ void readFile(char * fileName)
 		}
 		fprintf(stdout, "\nIn %s Vertexes = %d, faces = %d\n", fileName, vertexes, faces);
 		fclose(file);
+
+		printfVertexes(vertexList, vertexes);
 	}
 }
 
@@ -122,7 +168,7 @@ void readFile(char * fileName)
 int main()
 {
 	readFile("./obj/cube.obj");
-	readFile("./obj/african_head.obj");
+	//readFile("./obj/african_head.obj");
 
 	return 0;
 }
