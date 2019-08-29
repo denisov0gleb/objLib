@@ -12,6 +12,9 @@ endif
 
 all: $(EXECUTABLE)
 
+test:
+	$(CC) $(CFLAGS) test.exe test.c
+
 $(EXECUTABLE):
 	$(CC) $(CFLAGS) $(EXECUTABLE) main.c
 
