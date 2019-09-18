@@ -4,80 +4,85 @@
 #include "objLib.h"
 
 
-void readFaces(char * line)
+void readFaces(struct Face * f, char * line)
 {
-	int a, b, c;
-	sscanf(line, "f %d%*[^ ]%d%*[^ ]%d%*[^\n]", &a, &b, &c);
+	sscanf(line, "f %d%*[^ ]%d%*[^ ]%d%*[^\n]", &f->vA, &f->vB, &f->vC);
 }
 
 
-void readVertexes(char * line, struct Vertex * v)
+void WriteVertexLine(All * all, char * line)
 {
-	sscanf(line, "v %lf %lf %lf", &v->x, &v->y, &v->z);
-}
+	++all->vCurrent;
 
-
-void WriteVertexLine(AllVertexes * V, char * line)
-{
-	//fprintf(stdout, "Line!\n");
-	++V->current;
-
-	if (V->current >= V->size)
+	if (all->vCurrent >= all->vSize)
 	{
-		V->size *= MULTIPLIER;
-		//fprintf(stdout, "Size is = %d\n", V->size);
-		V->v = (struct Vertex *) realloc(V->v, sizeof(struct Vertex) * V->size);
-		//fprintf(stdout, "\tExpand!\n");
+		all->vSize *= MULTIPLIER;
+		all->V = (struct Vertex *) realloc(all->V, sizeof(struct Vertex) * all->vSize);
 	}
 
-	V->v[V->current].x = 1.0;
-	V->v[V->current].y = 1.0;
-	V->v[V->current].z = 1.0;
+	all->V[all->vCurrent].x = 1.0;
+	all->V[all->vCurrent].y = 1.0;
+	all->V[all->vCurrent].z = 1.0;
 }
 
 
-/*
-void WriteFaceLine(AllFaces * F, char * line)
+void WriteFaceLine(All * all, char * line)
 {
+	++all->fCurrent;
 
+	if (all->fCurrent >= all->fSize)
+	{
+		all->fSize *= MULTIPLIER;
+		all->F = (struct Face *) realloc(all->F, sizeof(struct Face) * all->fSize);
+	}
+
+	readFaces(&all->F[all->fCurrent], line);
 }
-*/
 
 
-AllVertexes * CreateVertexesList(void)
+void CreatePoints(All * all)
 {
-	AllVertexes * AllVert = (AllVertexes *) malloc(sizeof(AllVertexes *));
-	AllVert->v = malloc(sizeof(struct Vertex) * START_VERTEX_COUNT);
-	AllVert->current = 0;
-	AllVert->size = START_VERTEX_COUNT;
+	int i, j;
 
-	return AllVert;
+	all->Triangles = (struct Vertex **) malloc(sizeof(struct Vertex *) * all->fCurrent);
+	for (i = 0; i < all->fCurrent; i++)
+	{
+   	all->Triangles[i] = (struct Vertex *) malloc(sizeof(struct Vertex) * 3);
+	}
+	
+	for (i = 0; i < all->fCurrent; i++)
+	{
+		for (j = 0; j < 3; j++)
+		{
+			all->Triangles[i][j].x = 0.0;
+			all->Triangles[i][j].y = 1.0;
+			all->Triangles[i][j].z = 2.0;
+		}
+	}
 }
 
 
-/*
-AllPoints * CreatePoints(AllVertexes * V, AllFaces * F);
+void DeleteAll(All * all)
 {
-	return P;
+	free(all->V);
+	free(all->F);
+	free(all->Triangles);
+	free(all);
 }
-*/
-
-
-/*
-void DeleteFacesAndVertexes(AllVertexes * V, AllFaces * F);
-{
-
-}
-*/
 
 
 void ParseObjFile(char * fileName)
 {
-	int faces = 0;
 	char line[BUFFER_LENGTH + 1] = "";
 	FILE * file = fopen(fileName, "r");
-	AllVertexes * V = CreateVertexesList();
-	//AllFaces * F = CreateFacesList(void);
+
+	All * all = malloc(sizeof(All));
+	all->vSize = START_VERTEX_COUNT;
+	all->vCurrent = 0;
+	all->fSize = START_FACE_COUNT;
+	all->fCurrent = 0;
+	all->V = malloc(sizeof(struct Vertex) * START_VERTEX_COUNT);
+	all->F = malloc(sizeof(struct Face) * START_FACE_COUNT);
 
 	if (file == NULL)
 	{
@@ -93,16 +98,14 @@ void ParseObjFile(char * fileName)
 				{
 					case 'v':
 						if (line[1] == ' ')
-							WriteVertexLine(V, line);
+							WriteVertexLine(all, line);
 
 						break;
 
 					case 'f':
 						if (line[1] == ' ')
 						{
-							//WriteFaceLine(F, line);
-							readFaces(line);
-							++faces;
+							WriteFaceLine(all, line);
 						}
 						break;
 
@@ -111,10 +114,10 @@ void ParseObjFile(char * fileName)
 				}
 			}
 		}
+
 		fclose(file);
 
-		//AllPoints * P = CreatePoints(V, F);
+		CreatePoints(all);
+		fprintf(stdout, "There are %d vertexes in %d size\n\t\t %d faces in %d size\n", all->vCurrent, all->vSize, all->fCurrent, all->fSize);
 	}
 }
-
-

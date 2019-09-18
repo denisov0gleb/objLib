@@ -3,26 +3,9 @@
 
 #define BUFFER_LENGTH 255
 #define START_VERTEX_COUNT 2
+#define START_FACE_COUNT 2
 #define MULTIPLIER 2
 #define OBJ_STARTS_COUNTING_FROM_ONE 1
-
-
-typedef struct AllVertexes
-{
-	int size;
-	int current;
-	struct Vertex * v;
-} AllVertexes;
-
-
-/*
-typedef struct AllFaces
-{
-	int size;
-	int current;
-	struct Face * v;
-} AllFaces;
-*/
 
 
 struct Vertex
@@ -35,29 +18,36 @@ struct Vertex
 
 typedef struct Face
 {
-	struct Vertex a;
-	struct Vertex b;
-	struct Vertex c;
+	int vA;
+	int vB;
+	int vC;
 } Face;
 
 
-void readFaces(char * line);
+typedef struct All
+{
+	int vSize;
+	int vCurrent;
+	int fSize;
+	int fCurrent;
+	struct Vertex * V;
+	struct Face * F;
 
-void readVertexes(char * line, struct Vertex * v);
+	struct Vertex ** Triangles;
+} All;
 
-void printfVertexes(AllVertexes * AllVert);
 
-void WriteVertexLine(AllVertexes * V, char * line);
+void readFaces(struct Face * f, char * line);
 
-//void WriteFaceLine(AllFaces * F, char * line);
+void WriteVertexLine(All * all, char * line);
 
-AllVertexes * CreateVertexesList(void);
+void WriteFaceLine(All * all, char * line);
 
-//AllPoints * CreatePoints(AllVertexes * V, AllFaces * F);
+void CreatePoints(All * all);
 
 void ParseObjFile(char * fileName);
 
-//void DeleteFacesAndVertexes(AllVertexes * V, AllFaces * F);
+void DeleteAll(All * all);
 
 
 #endif //OBJLIB_H
