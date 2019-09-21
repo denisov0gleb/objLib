@@ -6,29 +6,27 @@
 
 void readFaces(struct Face * f, char * line)
 {
-	sscanf(line, "f %d%*[^ ]%d%*[^ ]%d%*[^\n]", &f->vA, &f->vB, &f->vC);
+	f->fL = malloc(sizeof(int) * 3);
+	sscanf(line, "f %d%*[^ ]%d%*[^ ]%d%*[^\n]", &f->fL[0], &f->fL[1], &f->fL[2]);
 }
 
 
 void WriteVertexLine(All * all, char * line)
 {
-	++all->vCurrent;
 
 	if (all->vCurrent >= all->vSize)
 	{
 		all->vSize *= MULTIPLIER;
 		all->V = (struct Vertex *) realloc(all->V, sizeof(struct Vertex) * all->vSize);
 	}
+	sscanf(line, "v %lf %lf %lf", &all->V[all->vCurrent].x, &all->V[all->vCurrent].y, &all->V[all->vCurrent].z);
 
-	all->V[all->vCurrent].x = 1.0;
-	all->V[all->vCurrent].y = 1.0;
-	all->V[all->vCurrent].z = 1.0;
+	++all->vCurrent;
 }
 
 
 void WriteFaceLine(All * all, char * line)
 {
-	++all->fCurrent;
 
 	if (all->fCurrent >= all->fSize)
 	{
@@ -37,28 +35,37 @@ void WriteFaceLine(All * all, char * line)
 	}
 
 	readFaces(&all->F[all->fCurrent], line);
+
+	++all->fCurrent;
 }
 
 
-void CreatePoints(All * all)
+void CreateTriangles(All * all)
 {
 	int i, j;
 
-	all->Triangles = (struct Vertex **) malloc(sizeof(struct Vertex *) * all->fCurrent);
+	all->Triangles = malloc(sizeof(struct Vertex *) * all->fCurrent);
+
 	for (i = 0; i < all->fCurrent; i++)
 	{
-   	all->Triangles[i] = (struct Vertex *) malloc(sizeof(struct Vertex) * 3);
+   	all->Triangles[i] = malloc(sizeof(struct Vertex) * 3);
 	}
-	
+
 	for (i = 0; i < all->fCurrent; i++)
 	{
 		for (j = 0; j < 3; j++)
 		{
-			all->Triangles[i][j].x = 0.0;
-			all->Triangles[i][j].y = 1.0;
-			all->Triangles[i][j].z = 2.0;
+			saveVertexesToTriangles(&all->Triangles[i][j], all->F[i].fL[j] - OBJ_STARTS_COUNTING_FROM_ONE, all->V);
 		}
 	}
+}
+
+
+void saveVertexesToTriangles(struct Vertex * T, int vertexNumber, struct Vertex * V)
+{
+	T->x = V[vertexNumber].x;
+	T->y = V[vertexNumber].y;
+	T->z = V[vertexNumber].z;
 }
 
 
@@ -71,7 +78,7 @@ void DeleteAll(All * all)
 }
 
 
-void ParseObjFile(char * fileName)
+All * ParseObjFile(char * fileName)
 {
 	char line[BUFFER_LENGTH + 1] = "";
 	FILE * file = fopen(fileName, "r");
@@ -117,7 +124,8 @@ void ParseObjFile(char * fileName)
 
 		fclose(file);
 
-		CreatePoints(all);
-		fprintf(stdout, "There are %d vertexes in %d size\n\t\t %d faces in %d size\n", all->vCurrent, all->vSize, all->fCurrent, all->fSize);
+		CreateTriangles(all);
 	}
+
+	return all;
 }

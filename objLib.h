@@ -18,9 +18,7 @@ struct Vertex
 
 typedef struct Face
 {
-	int vA;
-	int vB;
-	int vC;
+	int * fL;
 } Face;
 
 
@@ -43,9 +41,11 @@ void WriteVertexLine(All * all, char * line);
 
 void WriteFaceLine(All * all, char * line);
 
-void CreatePoints(All * all);
+void saveVertexesToTriangles(struct Vertex * T, int vertexNumber, struct Vertex * V);
 
-void ParseObjFile(char * fileName);
+void CreateTriangles(All * all);
+
+All * ParseObjFile(char * fileName);
 
 void DeleteAll(All * all);
 
